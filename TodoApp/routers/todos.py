@@ -1,10 +1,12 @@
 from typing import Annotated
+
+import fastapi.logger
 from fastapi import FastAPI, Depends, HTTPException, Path, APIRouter
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from starlette import status
-from models import Todos
-from database import SessionLocal
+from ..models import Todos
+from ..database import SessionLocal
 from .auth import get_current_user
 
 router = APIRouter()
@@ -29,7 +31,7 @@ class TodoRequest(BaseModel):
     completed: bool = Field(False)
 
 
-@router.get("/", status_code=status.HTTP_200_OK)
+@router.get("/todo", status_code=status.HTTP_200_OK)
 async def read_all(user: user_dependency, db: db_dependency):
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
@@ -39,7 +41,7 @@ async def read_all(user: user_dependency, db: db_dependency):
     return db.query(Todos).filter(Todos.owner_id == user.get('id')).all()
 
 
-@router.get("/{todo_id}", status_code=status.HTTP_200_OK)
+@router.get("/todo/{todo_id}", status_code=status.HTTP_200_OK)
 async def read_todo(user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
